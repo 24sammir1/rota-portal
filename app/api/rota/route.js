@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { auth } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Fetch rota data
 export async function GET(request) {
   try {
