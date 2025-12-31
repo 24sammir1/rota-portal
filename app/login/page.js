@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-function LoginForm() {
+export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
@@ -45,26 +45,22 @@ function LoginForm() {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="login-logo">ROTA</div>
-        <p className="login-subtitle">Staff Portal</p>
+    <div className="container" style={{ maxWidth: '420px', marginTop: '4rem' }}>
+      <div className="card">
+        <div className="card-header text-center">
+          <h1 className="card-title">🍕 Rota Portal</h1>
+          <p className="text-muted mt-1">Sign in to view your schedule</p>
+        </div>
 
         {registered && (
-          <div style={{ 
-            background: 'rgba(34, 197, 94, 0.1)', 
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-            color: '#22c55e',
-            padding: '0.75rem 1rem',
-            borderRadius: '8px',
-            fontSize: '0.875rem',
-            marginBottom: '1.5rem'
-          }}>
-            Account created! Please wait for admin approval before logging in.
+          <div className="alert alert-success">
+            Registration successful! Please wait for admin approval before logging in.
           </div>
         )}
 
-        {error && <div className="login-error">{error}</div>}
+        {error && (
+          <div className="alert alert-error">{error}</div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -76,7 +72,6 @@ function LoginForm() {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter your username"
               required
-              autoComplete="username"
             />
           </div>
 
@@ -89,7 +84,6 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
-              autoComplete="current-password"
             />
           </div>
 
@@ -103,25 +97,11 @@ function LoginForm() {
           </button>
         </form>
 
-        <div className="login-footer">
-          Don't have an account? <Link href="/register">Register here</Link>
-        </div>
+        <p className="text-center text-muted mt-3">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="link">Register here</Link>
+        </p>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="login-container">
-        <div className="login-card">
-          <div className="login-logo">ROTA</div>
-          <p className="login-subtitle">Loading...</p>
-        </div>
-      </div>
-    }>
-      <LoginForm />
-    </Suspense>
   );
 }

@@ -2,19 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
-export default function RegisterPage() {
+export default function SetupPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     confirmPassword: '',
     name: '',
-    phone: '',
-    emergencyContact: '',
+    setupKey: '',
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -24,6 +23,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -38,24 +38,24 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/users/register', {
+      const res = await fetch('/api/admin/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: formData.username,
           password: formData.password,
           name: formData.name,
-          phone: formData.phone,
-          emergencyContact: formData.emergencyContact,
+          setupKey: formData.setupKey,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Registration failed');
+        setError(data.error || 'Setup failed');
       } else {
-        router.push('/login?registered=true');
+        setSuccess('Admin account created! Redirecting to login...');
+        setTimeout(() => router.push('/login'), 2000);
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -65,33 +65,53 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="container" style={{ maxWidth: '480px', marginTop: '3rem' }}>
+    <div className="container" style={{ maxWidth: '480px', marginTop: '4rem' }}>
       <div className="card">
         <div className="card-header text-center">
-          <h1 className="card-title">Create Account</h1>
-          <p className="text-muted mt-1">Register to access the rota portal</p>
+          <h1 className="card-title">🔧 Initial Setup</h1>
+          <p className="text-muted mt-1">Create your admin account</p>
         </div>
 
         {error && (
           <div className="alert alert-error">{error}</div>
         )}
 
+        {success && (
+          <div className="alert alert-success">{success}</div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Full Name *</label>
+            <label className="form-label">Setup Key *</label>
+            <input
+              type="password"
+              name="setupKey"
+              className="form-input"
+              value={formData.setupKey}
+              onChange={handleChange}
+              placeholder="Enter the setup key"
+              required
+            />
+            <small className="text-muted">
+              The setup key is: setup-rota-2024
+            </small>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Your Name *</label>
             <input
               type="text"
               name="name"
               className="form-input"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Your full name (as on rota)"
+              placeholder="Your full name"
               required
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Username *</label>
+            <label className="form-label">Admin Username *</label>
             <input
               type="text"
               name="username"
@@ -129,48 +149,15 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Phone Number</label>
-            <input
-              type="tel"
-              name="phone"
-              className="form-input"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Your phone number"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Emergency Contact</label>
-            <input
-              type="text"
-              name="emergencyContact"
-              className="form-input"
-              value={formData.emergencyContact}
-              onChange={handleChange}
-              placeholder="Name and phone of emergency contact"
-            />
-          </div>
-
           <button 
             type="submit" 
             className="btn btn-primary" 
             style={{ width: '100%' }}
             disabled={loading}
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? 'Creating Admin...' : 'Create Admin Account'}
           </button>
         </form>
-
-        <p className="text-center text-muted mt-3">
-          Already have an account?{' '}
-          <Link href="/login" className="link">Sign in here</Link>
-        </p>
-
-        <div className="alert alert-info mt-2">
-          <strong>Note:</strong> After registering, an admin will need to approve your account before you can log in.
-        </div>
       </div>
     </div>
   );
