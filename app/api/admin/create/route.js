@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
 import { initDb } from '@/lib/db';
+
+const getDatabaseUrl = () => {
+  return process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
+};
 
 export async function POST(request) {
   try {
@@ -19,10 +23,12 @@ export async function POST(request) {
     // Initialize database tables first
     await initDb();
 
+    const sql = neon(getDatabaseUrl());
+
     // Check if admin already exists
     const existing = await sql`SELECT id FROM users WHERE role = 'admin' LIMIT 1`;
     
-    if (existing.rows.length > 0) {
+    if (existing.length > 0) {
       return NextResponse.json({ error: 'Admin already exists' }, { status: 400 });
     }
 

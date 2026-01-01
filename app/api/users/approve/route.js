@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { neon } from '@neondatabase/serverless';
 import { auth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+
+const getDatabaseUrl = () => {
+  return process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
+};
 
 export async function POST(request) {
   try {
@@ -17,6 +21,8 @@ export async function POST(request) {
     if (!userId || !action) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    const sql = neon(getDatabaseUrl());
 
     if (action === 'approve') {
       const userRole = role || 'staff';
