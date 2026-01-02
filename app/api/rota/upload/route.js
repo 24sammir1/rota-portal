@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getToken } from 'next-auth/jwt';
 import { neon } from '@neondatabase/serverless';
 
 export async function POST(request) {
   try {
-    const session = await getServerSession();
+    // Use getToken instead of getServerSession for API routes
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     
-    if (!session) {
+    if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    if (session.user.role !== 'admin') {
+    if (token.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
     
@@ -70,9 +71,9 @@ export async function POST(request) {
 
 export async function GET(request) {
   try {
-    const session = await getServerSession();
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     
-    if (!session) {
+    if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
