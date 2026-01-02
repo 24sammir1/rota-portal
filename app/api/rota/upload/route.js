@@ -1,18 +1,8 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { cookies } from 'next/headers';
 
 export async function POST(request) {
   try {
-    // For now, just check if there's a session cookie present
-    // The admin page already checks auth on the client side
-    const cookieStore = cookies();
-    const sessionToken = cookieStore.get('next-auth.session-token') || cookieStore.get('__Secure-next-auth.session-token');
-    
-    if (!sessionToken) {
-      return NextResponse.json({ error: 'Unauthorized - no session' }, { status: 401 });
-    }
-    
     const data = await request.json();
     
     if (!data.weekEnding) {
@@ -69,13 +59,6 @@ export async function POST(request) {
 
 export async function GET(request) {
   try {
-    const cookieStore = cookies();
-    const sessionToken = cookieStore.get('next-auth.session-token') || cookieStore.get('__Secure-next-auth.session-token');
-    
-    if (!sessionToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
     const sql = neon(process.env.DATABASE_URL);
     
     const rotas = await sql`
