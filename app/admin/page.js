@@ -1,9 +1,9 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import Header from '../components/Header';
+import Link from 'next/link';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -95,7 +95,6 @@ export default function AdminPage() {
         setSelectedFile(null);
         setPreviewData(null);
         fetchRotas();
-        // Reset file input
         document.getElementById('fileInput').value = '';
       } else {
         setUploadStatus({ type: 'error', message: data.error || 'Upload failed' });
@@ -153,11 +152,46 @@ export default function AdminPage() {
 
   return (
     <>
-      <Header />
-      <div className="container" style={{ marginTop: '2rem', maxWidth: '900px' }}>
+      <nav style={{ 
+        background: '#333', 
+        padding: '1rem', 
+        marginBottom: '2rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+          <Link href="/" style={{ color: 'white', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.2rem' }}>
+            Rota Portal
+          </Link>
+          <Link href="/" style={{ color: '#ccc', textDecoration: 'none' }}>
+            Dashboard
+          </Link>
+          <Link href="/admin" style={{ color: 'white', textDecoration: 'none' }}>
+            Admin
+          </Link>
+        </div>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <span style={{ color: '#ccc' }}>{session.user.name}</span>
+          <button 
+            onClick={() => signOut()}
+            style={{ 
+              background: '#dc3545', 
+              color: 'white', 
+              border: 'none', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Sign Out
+          </button>
+        </div>
+      </nav>
+
+      <div className="container" style={{ marginTop: '2rem', maxWidth: '900px', margin: '0 auto', padding: '0 1rem' }}>
         <h1>Admin Panel</h1>
 
-        {/* Tabs */}
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '2px solid #dee2e6' }}>
           <button
             onClick={() => setActiveTab('upload')}
@@ -203,9 +237,8 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Upload Tab */}
         {activeTab === 'upload' && (
-          <div className="card">
+          <div className="card" style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <h2>Upload Rota JSON</h2>
             <p style={{ color: '#666', marginBottom: '1rem' }}>
               Export your rota from Excel using the VBA macro, then upload the JSON file here.
@@ -266,9 +299,13 @@ export default function AdminPage() {
             <button
               onClick={handleUpload}
               disabled={!previewData || isUploading}
-              className="btn btn-primary"
               style={{ 
                 padding: '0.75rem 2rem',
+                background: '#0d6efd',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: (!previewData || isUploading) ? 'not-allowed' : 'pointer',
                 opacity: (!previewData || isUploading) ? 0.5 : 1,
               }}
             >
@@ -277,9 +314,8 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Rotas Tab */}
         {activeTab === 'rotas' && (
-          <div className="card">
+          <div className="card" style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <h2>Uploaded Rotas</h2>
             {rotas.length === 0 ? (
               <p style={{ color: '#666' }}>No rotas uploaded yet.</p>
@@ -320,9 +356,8 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Users Tab */}
         {activeTab === 'users' && (
-          <div className="card">
+          <div className="card" style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <h2>Pending User Approvals</h2>
             {pendingUsers.length === 0 ? (
               <p style={{ color: '#666' }}>No pending user requests.</p>
