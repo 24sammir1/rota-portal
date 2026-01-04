@@ -23,6 +23,6 @@ export async function POST(request) {
     
   } catch (error) {
     console.error('Deactivate user error:', error);
-    return NextResponse.json({ error: 'Failed to update user status' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update user status', details: error.message }, { status: 500 });
   }
 }

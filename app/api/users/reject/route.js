@@ -11,13 +11,12 @@ export async function POST(request) {
     
     const sql = neon(process.env.DATABASE_URL);
     
-    // Delete the pending user
     await sql`DELETE FROM users WHERE id = ${userId} AND status = 'pending'`;
     
     return NextResponse.json({ success: true, message: 'User rejected' });
     
   } catch (error) {
     console.error('Reject user error:', error);
-    return NextResponse.json({ error: 'Failed to reject user' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to reject user', details: error.message }, { status: 500 });
   }
 }

@@ -17,6 +17,6 @@ export async function POST(request) {
     
   } catch (error) {
     console.error('Update user error:', error);
-    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update user', details: error.message }, { status: 500 });
   }
 }

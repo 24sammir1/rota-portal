@@ -11,7 +11,6 @@ export async function POST(request) {
     
     const sql = neon(process.env.DATABASE_URL);
     
-    // If name provided, update name as well as status
     if (name) {
       await sql`
         UPDATE users 
@@ -30,6 +29,6 @@ export async function POST(request) {
     
   } catch (error) {
     console.error('Approve user error:', error);
-    return NextResponse.json({ error: 'Failed to approve user' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to approve user', details: error.message }, { status: 500 });
   }
 }
