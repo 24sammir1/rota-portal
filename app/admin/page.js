@@ -13,8 +13,11 @@ export default function AdminPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [rotas, setRotas] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewData, setPreviewData] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editName, setEditName] = useState('');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -28,6 +31,7 @@ export default function AdminPage() {
     if (session?.user?.role === 'admin') {
       fetchRotas();
       fetchPendingUsers();
+      fetchAllUsers();
     }
   }, [session]);
 
@@ -52,6 +56,18 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error('Error fetching pending users:', error);
+    }
+  };
+
+  const fetchAllUsers = async () => {
+    try {
+      const res = await fetch('/api/users/all');
+      const data = await res.json();
+      if (data.users) {
+        setAllUsers(data.users);
+      }
+    } catch (error) {
+      console.error('Error fetching all users:', error);
     }
   };
 
@@ -106,16 +122,19 @@ export default function AdminPage() {
     }
   };
 
-  const handleApproveUser = async (userId) => {
+  const handleApproveUser = async (userId, newName = null) => {
     try {
       const res = await fetch('/api/users/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, name: newName }),
       });
 
       if (res.ok) {
         fetchPendingUsers();
+        fetchAllUsers();
+        setEditingUser(null);
+        setEditName('');
       }
     } catch (error) {
       console.error('Error approving user:', error);
@@ -123,6 +142,8 @@ export default function AdminPage() {
   };
 
   const handleRejectUser = async (userId) => {
+    if (!confirm('Are you sure you want to reject this user? They will be deleted.')) return;
+    
     try {
       const res = await fetch('/api/users/reject', {
         method: 'POST',
@@ -136,6 +157,59 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Error rejecting user:', error);
     }
+  };
+
+  const handleUpdateUser = async (userId) => {
+    if (!editName.trim()) return;
+    
+    try {
+      const res = await fetch('/api/users/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, name: editName }),
+      });
+
+      if (res.ok) {
+        fetchAllUsers();
+        setEditingUser(null);
+        setEditName('');
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
+  };
+
+  const handleToggleStatus = async (userId, currentStatus) => {
+    const action = currentStatus === 'approved' ? 'deactivate' : 'reactivate';
+    const confirmMsg = action === 'deactivate' 
+      ? 'Deactivate this user? They will not be able to log in.'
+      : 'Reactivate this user? They will be able to log in again.';
+    
+    if (!confirm(confirmMsg)) return;
+    
+    try {
+      const res = await fetch('/api/users/deactivate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action }),
+      });
+
+      if (res.ok) {
+        fetchAllUsers();
+      }
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+    }
+  };
+
+  const startEditPending = (user) => {
+    setEditingUser({ ...user, type: 'pending' });
+    setEditName(user.name);
+  };
+
+  const startEditUser = (user) => {
+    setEditingUser({ ...user, type: 'existing' });
+    setEditName(user.name);
   };
 
   if (status === 'loading') {
@@ -192,7 +266,7 @@ export default function AdminPage() {
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 1rem' }}>
         <h1 style={{ color: '#333' }}>Admin Panel</h1>
 
-        <div style={{ display: 'flex', gap: '0', marginBottom: '1.5rem', borderBottom: '2px solid #dee2e6' }}>
+        <div style={{ display: 'flex', gap: '0', marginBottom: '1.5rem', borderBottom: '2px solid #dee2e6', flexWrap: 'wrap' }}>
           <button
             onClick={() => setActiveTab('upload')}
             style={{
@@ -219,7 +293,33 @@ export default function AdminPage() {
               fontWeight: activeTab === 'rotas' ? 'bold' : 'normal',
             }}
           >
-            Uploaded Rotas ({rotas.length})
+            Rotas ({rotas.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('pending')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              background: activeTab === 'pending' ? '#0d6efd' : 'transparent',
+              color: activeTab === 'pending' ? 'white' : '#333',
+              cursor: 'pointer',
+              borderRadius: '4px 4px 0 0',
+              fontWeight: activeTab === 'pending' ? 'bold' : 'normal',
+              position: 'relative',
+            }}
+          >
+            Pending {pendingUsers.length > 0 && (
+              <span style={{
+                background: '#dc3545',
+                color: 'white',
+                borderRadius: '50%',
+                padding: '0.1rem 0.4rem',
+                fontSize: '0.75rem',
+                marginLeft: '0.3rem',
+              }}>
+                {pendingUsers.length}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('users')}
@@ -233,7 +333,7 @@ export default function AdminPage() {
               fontWeight: activeTab === 'users' ? 'bold' : 'normal',
             }}
           >
-            Pending Users ({pendingUsers.length})
+            All Users ({allUsers.length})
           </button>
         </div>
 
@@ -358,9 +458,12 @@ export default function AdminPage() {
           </div>
         )}
 
-        {activeTab === 'users' && (
+        {activeTab === 'pending' && (
           <div style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
             <h2 style={{ color: '#333', marginTop: 0 }}>Pending User Approvals</h2>
+            <p style={{ color: '#666', marginBottom: '1rem', fontSize: '0.9rem' }}>
+              Review and approve new registrations. Edit the name if it doesn't match the Excel rota exactly.
+            </p>
             {pendingUsers.length === 0 ? (
               <p style={{ color: '#666' }}>No pending user requests.</p>
             ) : (
@@ -371,47 +474,246 @@ export default function AdminPage() {
                     style={{ 
                       padding: '1rem',
                       borderBottom: '1px solid #dee2e6',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
+                      background: editingUser?.id === user.id ? '#f8f9fa' : 'transparent',
                     }}
                   >
-                    <div>
-                      <strong style={{ color: '#333' }}>{user.name}</strong>
-                      <br />
-                      <small style={{ color: '#666' }}>@{user.username}</small>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button
-                        onClick={() => handleApproveUser(user.id)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          background: '#28a745',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleRejectUser(user.id)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          background: '#dc3545',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Reject
-                      </button>
-                    </div>
+                    {editingUser?.id === user.id && editingUser?.type === 'pending' ? (
+                      <div>
+                        <div style={{ marginBottom: '0.5rem' }}>
+                          <label style={{ color: '#333', fontSize: '0.9rem' }}>Name (must match Excel rota):</label>
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            style={{
+                              display: 'block',
+                              width: '100%',
+                              padding: '0.5rem',
+                              marginTop: '0.25rem',
+                              border: '1px solid #ced4da',
+                              borderRadius: '4px',
+                            }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            onClick={() => handleApproveUser(user.id, editName)}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              background: '#28a745',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Approve with this name
+                          </button>
+                          <button
+                            onClick={() => { setEditingUser(null); setEditName(''); }}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              background: '#6c757d',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <strong style={{ color: '#333' }}>{user.name}</strong>
+                          <br />
+                          <small style={{ color: '#666' }}>Username: {user.username}</small>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            onClick={() => handleApproveUser(user.id)}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              background: '#28a745',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => startEditPending(user)}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              background: '#ffc107',
+                              color: '#333',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Edit & Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejectUser(user.id)}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              background: '#dc3545',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'users' && (
+          <div style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ color: '#333', marginTop: 0 }}>All Users</h2>
+            <p style={{ color: '#666', marginBottom: '1rem', fontSize: '0.9rem' }}>
+              Manage approved users. Edit names or deactivate access.
+            </p>
+            {allUsers.length === 0 ? (
+              <p style={{ color: '#666' }}>No users yet.</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #dee2e6' }}>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#333' }}>Name</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#333' }}>Username</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#333' }}>Role</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#333' }}>Status</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'right', color: '#333' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allUsers.map((user) => (
+                    <tr key={user.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+                      <td style={{ padding: '0.75rem', color: '#333' }}>
+                        {editingUser?.id === user.id && editingUser?.type === 'existing' ? (
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            style={{
+                              padding: '0.25rem 0.5rem',
+                              border: '1px solid #ced4da',
+                              borderRadius: '4px',
+                              width: '150px',
+                            }}
+                          />
+                        ) : (
+                          user.name
+                        )}
+                      </td>
+                      <td style={{ padding: '0.75rem', color: '#666' }}>{user.username}</td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span style={{
+                          padding: '0.2rem 0.5rem',
+                          borderRadius: '4px',
+                          background: user.role === 'admin' ? '#6f42c1' : '#17a2b8',
+                          color: 'white',
+                          fontSize: '0.8rem',
+                        }}>
+                          {user.role}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span style={{
+                          padding: '0.2rem 0.5rem',
+                          borderRadius: '4px',
+                          background: user.status === 'approved' ? '#d4edda' : '#f8d7da',
+                          color: user.status === 'approved' ? '#155724' : '#721c24',
+                          fontSize: '0.8rem',
+                        }}>
+                          {user.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                        {editingUser?.id === user.id && editingUser?.type === 'existing' ? (
+                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={() => handleUpdateUser(user.id)}
+                              style={{
+                                padding: '0.25rem 0.5rem',
+                                background: '#28a745',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                              }}
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => { setEditingUser(null); setEditName(''); }}
+                              style={{
+                                padding: '0.25rem 0.5rem',
+                                background: '#6c757d',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={() => startEditUser(user)}
+                              style={{
+                                padding: '0.25rem 0.5rem',
+                                background: '#ffc107',
+                                color: '#333',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                              }}
+                            >
+                              Edit
+                            </button>
+                            {user.role !== 'admin' && (
+                              <button
+                                onClick={() => handleToggleStatus(user.id, user.status)}
+                                style={{
+                                  padding: '0.25rem 0.5rem',
+                                  background: user.status === 'approved' ? '#dc3545' : '#28a745',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontSize: '0.85rem',
+                                }}
+                              >
+                                {user.status === 'approved' ? 'Deactivate' : 'Reactivate'}
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         )}

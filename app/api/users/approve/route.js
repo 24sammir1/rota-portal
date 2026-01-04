@@ -1,45 +1,35 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
-import { auth } from '@/lib/auth';
-
-export const dynamic = 'force-dynamic';
-
-const getDatabaseUrl = () => {
-  return process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
-};
 
 export async function POST(request) {
   try {
-    const session = await auth();
+    const { userId, name } = await request.json();
     
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
-
-    const { userId, action, role } = await request.json();
-
-    if (!userId || !action) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    const sql = neon(getDatabaseUrl());
-
-    if (action === 'approve') {
-      const userRole = role || 'staff';
+    
+    const sql = neon(process.env.DATABASE_URL);
+    
+    // If name provided, update name as well as status
+    if (name) {
       await sql`
         UPDATE users 
-        SET approved = 1, role = ${userRole}
+        SET status = 'approved', name = ${name}
         WHERE id = ${userId}
       `;
-      return NextResponse.json({ success: true, message: 'User approved' });
-    } else if (action === 'decline') {
-      await sql`DELETE FROM users WHERE id = ${userId}`;
-      return NextResponse.json({ success: true, message: 'User declined and removed' });
+    } else {
+      await sql`
+        UPDATE users 
+        SET status = 'approved'
+        WHERE id = ${userId}
+      `;
     }
-
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    
+    return NextResponse.json({ success: true, message: 'User approved' });
+    
   } catch (error) {
     console.error('Approve user error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to approve user' }, { status: 500 });
   }
 }
