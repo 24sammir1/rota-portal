@@ -140,7 +140,7 @@ export default function AdminPage() {
 
   if (status === 'loading') {
     return (
-      <div className="container" style={{ marginTop: '2rem' }}>
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
         <p>Loading...</p>
       </div>
     );
@@ -189,10 +189,10 @@ export default function AdminPage() {
         </div>
       </nav>
 
-      <div className="container" style={{ marginTop: '2rem', maxWidth: '900px', margin: '0 auto', padding: '0 1rem' }}>
-        <h1>Admin Panel</h1>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 1rem' }}>
+        <h1 style={{ color: '#333' }}>Admin Panel</h1>
 
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '2px solid #dee2e6' }}>
+        <div style={{ display: 'flex', gap: '0', marginBottom: '1.5rem', borderBottom: '2px solid #dee2e6' }}>
           <button
             onClick={() => setActiveTab('upload')}
             style={{
@@ -238,8 +238,8 @@ export default function AdminPage() {
         </div>
 
         {activeTab === 'upload' && (
-          <div className="card" style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-            <h2>Upload Rota JSON</h2>
+          <div style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ color: '#333', marginTop: 0 }}>Upload Rota JSON</h2>
             <p style={{ color: '#666', marginBottom: '1rem' }}>
               Export your rota from Excel using the VBA macro, then upload the JSON file here.
             </p>
@@ -261,18 +261,18 @@ export default function AdminPage() {
                 borderRadius: '4px',
                 marginBottom: '1rem' 
               }}>
-                <h3 style={{ marginTop: 0 }}>Preview</h3>
-                <p><strong>Week Ending:</strong> {previewData.weekEnding}</p>
-                <p><strong>Sheet Name:</strong> {previewData.sheetName}</p>
-                <p><strong>Type:</strong> {previewData.type}</p>
-                <p><strong>Staff Count:</strong> {previewData.staff?.length || 0}</p>
+                <h3 style={{ marginTop: 0, color: '#333' }}>Preview</h3>
+                <p style={{ color: '#333' }}><strong>Week Ending:</strong> {previewData.weekEnding}</p>
+                <p style={{ color: '#333' }}><strong>Sheet Name:</strong> {previewData.sheetName}</p>
+                <p style={{ color: '#333' }}><strong>Type:</strong> {previewData.type}</p>
+                <p style={{ color: '#333' }}><strong>Staff Count:</strong> {previewData.staff?.length || 0}</p>
                 
                 {previewData.staff && previewData.staff.length > 0 && (
                   <details>
-                    <summary style={{ cursor: 'pointer', marginTop: '0.5rem' }}>
+                    <summary style={{ cursor: 'pointer', marginTop: '0.5rem', color: '#333' }}>
                       View Staff List
                     </summary>
-                    <ul style={{ maxHeight: '200px', overflow: 'auto', marginTop: '0.5rem' }}>
+                    <ul style={{ maxHeight: '200px', overflow: 'auto', marginTop: '0.5rem', color: '#333' }}>
                       {previewData.staff.map((s, i) => (
                         <li key={i}>
                           {s.name} ({s.role}) - {s.totalHours} hrs
@@ -315,24 +315,26 @@ export default function AdminPage() {
         )}
 
         {activeTab === 'rotas' && (
-          <div className="card" style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-            <h2>Uploaded Rotas</h2>
+          <div style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ color: '#333', marginTop: 0 }}>Uploaded Rotas</h2>
             {rotas.length === 0 ? (
               <p style={{ color: '#666' }}>No rotas uploaded yet.</p>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #dee2e6' }}>
-                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Week Ending</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Type</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Staff</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'left' }}>Uploaded</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#333' }}>Week Ending</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#333' }}>Type</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#333' }}>Staff</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', color: '#333' }}>Uploaded</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rotas.map((rota) => (
                     <tr key={rota.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                      <td style={{ padding: '0.75rem' }}>{rota.week_ending}</td>
+                      <td style={{ padding: '0.75rem', color: '#333' }}>
+                        {new Date(rota.week_ending).toLocaleDateString('en-GB')}
+                      </td>
                       <td style={{ padding: '0.75rem' }}>
                         <span style={{
                           padding: '0.25rem 0.5rem',
@@ -344,9 +346,9 @@ export default function AdminPage() {
                           {rota.type}
                         </span>
                       </td>
-                      <td style={{ padding: '0.75rem' }}>{rota.staff_count}</td>
+                      <td style={{ padding: '0.75rem', color: '#333' }}>{rota.staff_count}</td>
                       <td style={{ padding: '0.75rem', fontSize: '0.85rem', color: '#666' }}>
-                        {new Date(rota.uploaded_at).toLocaleString()}
+                        {new Date(rota.uploaded_at).toLocaleString('en-GB')}
                       </td>
                     </tr>
                   ))}
@@ -357,8 +359,8 @@ export default function AdminPage() {
         )}
 
         {activeTab === 'users' && (
-          <div className="card" style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-            <h2>Pending User Approvals</h2>
+          <div style={{ background: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ color: '#333', marginTop: 0 }}>Pending User Approvals</h2>
             {pendingUsers.length === 0 ? (
               <p style={{ color: '#666' }}>No pending user requests.</p>
             ) : (
@@ -375,7 +377,7 @@ export default function AdminPage() {
                     }}
                   >
                     <div>
-                      <strong>{user.name}</strong>
+                      <strong style={{ color: '#333' }}>{user.name}</strong>
                       <br />
                       <small style={{ color: '#666' }}>@{user.username}</small>
                     </div>
