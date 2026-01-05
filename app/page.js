@@ -175,6 +175,7 @@ export default function Dashboard() {
   const [myShifts, setMyShifts] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [viewAsStaff, setViewAsStaff] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -234,7 +235,7 @@ export default function Dashboard() {
           <Link href="/" style={styles.navBrand}>Rota Portal</Link>
           <Link href="/" style={{...styles.navLink, ...styles.navLinkActive}}>Dashboard</Link>
           <Link href="/time-off" style={styles.navLink}>Time Off</Link>
-          {session.user.role === 'admin' && (
+          {session.user.role === 'admin' && !viewAsStaff && (
             <Link href="/admin" style={styles.navLink}>Admin</Link>
           )}
         </div>
@@ -243,6 +244,36 @@ export default function Dashboard() {
           <button onClick={() => signOut()} style={styles.signOutBtn}>Sign Out</button>
         </div>
       </nav>
+
+      {session.user.role === 'admin' && (
+        <div style={{
+          background: viewAsStaff ? '#4ecdc4' : '#0f3460',
+          padding: '0.5rem 2rem',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '1rem',
+        }}>
+          <span style={{ color: viewAsStaff ? '#1a1a2e' : '#a0a0a0', fontSize: '0.85rem' }}>
+            {viewAsStaff ? '👁 Viewing as Staff' : 'Admin View'}
+          </span>
+          <button
+            onClick={() => setViewAsStaff(!viewAsStaff)}
+            style={{
+              background: viewAsStaff ? '#1a1a2e' : '#e94560',
+              color: 'white',
+              border: 'none',
+              padding: '0.35rem 0.75rem',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+              fontWeight: 500,
+            }}
+          >
+            {viewAsStaff ? 'Back to Admin View' : 'View as Staff'}
+          </button>
+        </div>
+      )}
 
       <div style={styles.container}>
         <h1 style={styles.welcome}>Welcome, {session.user.name}</h1>
@@ -317,7 +348,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {session.user.role === 'admin' && (
+            {session.user.role === 'admin' && !viewAsStaff && (
               <div style={styles.card}>
                 <h2 style={styles.cardTitle}>
                   <span style={styles.cardTitleBar}></span>
