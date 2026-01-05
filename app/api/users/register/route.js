@@ -2,39 +2,31 @@ import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
 
-const getDatabaseUrl = () => {
-  return process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
-};
-
 export async function POST(request) {
   try {
-    const { username, password, name, phone, emergencyContact } = await request.json();
-
-    if (!username || !password || !name) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const { name, phone, address, dob, emergencyName, emergencyRelation, emergencyPhone, existingStaff, startDate, username, password } = await request.json();
+    
+    if (!name || !phone || !username || !password) {
+      return NextResponse.json({ error: 'Required fields missing' }, { status: 400 });
     }
 
-    const sql = neon(getDatabaseUrl());
-
-    // Check if username exists
-    const existing = await sql`SELECT id FROM users WHERE username = ${username}`;
+    const sql = neon(process.env.DATABASE_URL);
     
+    const existing = await sql`SELECT id FROM users WHERE username = ${username}`;
     if (existing.length > 0) {
       return NextResponse.json({ error: 'Username already taken' }, { status: 400 });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user (not approved by default)
+    
     await sql`
-      INSERT INTO users (username, password, name, phone, emergency_contact, approved)
-      VALUES (${username}, ${hashedPassword}, ${name}, ${phone || null}, ${emergencyContact || null}, 0)
+      INSERT INTO users (username, password, name, phone, address, dob, emergency_name, emergency_relation, emergency_phone, existing_staff, start_date, role, status)
+      VALUES (${username}, ${hashedPassword}, ${name}, ${phone}, ${address}, ${dob || null}, ${emergencyName}, ${emergencyRelation}, ${emergencyPhone}, ${existingStaff || false}, ${startDate || null}, 'staff', 'pending')
     `;
 
-    return NextResponse.json({ success: true, message: 'Registration successful. Awaiting admin approval.' });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Registration error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Register error:', error);
+    return NextResponse.json({ error: 'Registration failed', details: error.message }, { status: 500 });
   }
 }
