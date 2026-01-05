@@ -1,121 +1,176 @@
 'use client';
 
-import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background: '#1a1a2e',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '2rem',
+  },
+  container: {
+    width: '100%',
+    maxWidth: '400px',
+  },
+  brand: {
+    color: '#e94560',
+    fontSize: '2rem',
+    fontWeight: 700,
+    textAlign: 'center',
+    marginBottom: '0.5rem',
+  },
+  tagline: {
+    color: '#a0a0a0',
+    textAlign: 'center',
+    marginBottom: '2rem',
+  },
+  card: {
+    background: '#16213e',
+    borderRadius: '12px',
+    padding: '2rem',
+    border: '1px solid #0f3460',
+  },
+  title: {
+    color: '#ffffff',
+    fontSize: '1.5rem',
+    marginBottom: '1.5rem',
+    fontWeight: 600,
+    textAlign: 'center',
+  },
+  label: {
+    display: 'block',
+    color: '#a0a0a0',
+    fontSize: '0.9rem',
+    marginBottom: '0.5rem',
+  },
+  input: {
+    width: '100%',
+    background: '#0f3460',
+    border: '1px solid #1a3a5c',
+    borderRadius: '6px',
+    padding: '0.875rem 1rem',
+    color: '#ffffff',
+    fontSize: '1rem',
+    marginBottom: '1rem',
+    outline: 'none',
+  },
+  btn: {
+    width: '100%',
+    background: '#e94560',
+    color: 'white',
+    border: 'none',
+    padding: '0.875rem',
+    borderRadius: '6px',
+    fontSize: '1rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    marginTop: '0.5rem',
+  },
+  btnDisabled: {
+    opacity: 0.6,
+    cursor: 'not-allowed',
+  },
+  error: {
+    background: 'rgba(233, 69, 96, 0.15)',
+    border: '1px solid rgba(233, 69, 96, 0.3)',
+    color: '#e94560',
+    padding: '0.75rem',
+    borderRadius: '6px',
+    marginBottom: '1rem',
+    fontSize: '0.9rem',
+    textAlign: 'center',
+  },
+  footer: {
+    textAlign: 'center',
+    marginTop: '1.5rem',
+    color: '#a0a0a0',
+    fontSize: '0.9rem',
+  },
+  link: {
+    color: '#e94560',
+    textDecoration: 'none',
+    fontWeight: 500,
+  },
+};
+
+export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const registered = searchParams.get('registered');
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    try {
-      const result = await signIn('credentials', {
-        username,
-        password,
-        redirect: false,
-      });
+    const result = await signIn('credentials', {
+      username,
+      password,
+      redirect: false,
+    });
 
-      if (result?.error) {
-        if (result.error === 'Account pending approval') {
-          setError('Your account is pending approval. Please wait for admin approval.');
-        } else {
-          setError('Invalid username or password');
-        }
-      } else {
-        router.push('/');
-        router.refresh();
-      }
-    } catch (err) {
-      setError('An error occurred. Please try again.');
-    } finally {
+    if (result?.error) {
+      setError('Invalid username or password');
       setLoading(false);
+    } else {
+      router.push('/');
     }
   };
 
   return (
-    <div className="container" style={{ maxWidth: '420px', marginTop: '4rem' }}>
-      <div className="card">
-        <div className="card-header text-center">
-          <h1 className="card-title">🍕 Rota Portal</h1>
-          <p className="text-muted mt-1">Sign in to view your schedule</p>
-        </div>
-
-        {registered && (
-          <div className="alert alert-success">
-            Registration successful! Please wait for admin approval before logging in.
-          </div>
-        )}
-
-        {error && (
-          <div className="alert alert-error">{error}</div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Username</label>
+    <div style={styles.page}>
+      <div style={styles.container}>
+        <h1 style={styles.brand}>Rota Portal</h1>
+        <p style={styles.tagline}>Staff Scheduling System</p>
+        
+        <div style={styles.card}>
+          <h2 style={styles.title}>Sign In</h2>
+          
+          {error && <div style={styles.error}>{error}</div>}
+          
+          <form onSubmit={handleSubmit}>
+            <label style={styles.label}>Username</label>
             <input
               type="text"
-              className="form-input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              style={styles.input}
               placeholder="Enter your username"
               required
             />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Password</label>
+            
+            <label style={styles.label}>Password</label>
             <input
               type="password"
-              className="form-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              style={styles.input}
               placeholder="Enter your password"
               required
             />
+            
+            <button
+              type="submit"
+              disabled={loading}
+              style={{...styles.btn, ...(loading ? styles.btnDisabled : {})}}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+          
+          <div style={styles.footer}>
+            Don't have an account? <Link href="/register" style={styles.link}>Register</Link>
           </div>
-
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
-            style={{ width: '100%' }}
-            disabled={loading}
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <p className="text-center text-muted mt-3">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="link">Register here</Link>
-        </p>
-      </div>
-    </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="container" style={{ maxWidth: '420px', marginTop: '4rem' }}>
-        <div className="card text-center">
-          <p>Loading...</p>
         </div>
       </div>
-    }>
-      <LoginForm />
-    </Suspense>
+    </div>
   );
 }

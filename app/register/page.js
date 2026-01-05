@@ -4,18 +4,137 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background: '#1a1a2e',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '2rem',
+  },
+  container: {
+    width: '100%',
+    maxWidth: '400px',
+  },
+  brand: {
+    color: '#e94560',
+    fontSize: '2rem',
+    fontWeight: 700,
+    textAlign: 'center',
+    marginBottom: '0.5rem',
+  },
+  tagline: {
+    color: '#a0a0a0',
+    textAlign: 'center',
+    marginBottom: '2rem',
+  },
+  card: {
+    background: '#16213e',
+    borderRadius: '12px',
+    padding: '2rem',
+    border: '1px solid #0f3460',
+  },
+  title: {
+    color: '#ffffff',
+    fontSize: '1.5rem',
+    marginBottom: '0.5rem',
+    fontWeight: 600,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: '#a0a0a0',
+    fontSize: '0.9rem',
+    textAlign: 'center',
+    marginBottom: '1.5rem',
+  },
+  label: {
+    display: 'block',
+    color: '#a0a0a0',
+    fontSize: '0.9rem',
+    marginBottom: '0.5rem',
+  },
+  input: {
+    width: '100%',
+    background: '#0f3460',
+    border: '1px solid #1a3a5c',
+    borderRadius: '6px',
+    padding: '0.875rem 1rem',
+    color: '#ffffff',
+    fontSize: '1rem',
+    marginBottom: '1rem',
+    outline: 'none',
+  },
+  hint: {
+    color: '#a0a0a0',
+    fontSize: '0.8rem',
+    marginTop: '-0.75rem',
+    marginBottom: '1rem',
+  },
+  btn: {
+    width: '100%',
+    background: '#e94560',
+    color: 'white',
+    border: 'none',
+    padding: '0.875rem',
+    borderRadius: '6px',
+    fontSize: '1rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    marginTop: '0.5rem',
+  },
+  btnDisabled: {
+    opacity: 0.6,
+    cursor: 'not-allowed',
+  },
+  error: {
+    background: 'rgba(233, 69, 96, 0.15)',
+    border: '1px solid rgba(233, 69, 96, 0.3)',
+    color: '#e94560',
+    padding: '0.75rem',
+    borderRadius: '6px',
+    marginBottom: '1rem',
+    fontSize: '0.9rem',
+    textAlign: 'center',
+  },
+  success: {
+    background: 'rgba(78, 205, 196, 0.15)',
+    border: '1px solid rgba(78, 205, 196, 0.3)',
+    color: '#4ecdc4',
+    padding: '1rem',
+    borderRadius: '6px',
+    textAlign: 'center',
+  },
+  successTitle: {
+    fontSize: '1.1rem',
+    fontWeight: 600,
+    marginBottom: '0.5rem',
+  },
+  footer: {
+    textAlign: 'center',
+    marginTop: '1.5rem',
+    color: '#a0a0a0',
+    fontSize: '0.9rem',
+  },
+  link: {
+    color: '#e94560',
+    textDecoration: 'none',
+    fontWeight: 500,
+  },
+};
+
 export default function RegisterPage() {
-  const router = useRouter();
   const [formData, setFormData] = useState({
+    name: '',
     username: '',
     password: '',
     confirmPassword: '',
-    name: '',
     phone: '',
-    emergencyContact: '',
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -30,8 +149,8 @@ export default function RegisterPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (formData.password.length < 4) {
+      setError('Password must be at least 4 characters');
       return;
     }
 
@@ -42,134 +161,128 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          name: formData.name,
           username: formData.username,
           password: formData.password,
-          name: formData.name,
           phone: formData.phone,
-          emergencyContact: formData.emergencyContact,
         }),
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || 'Registration failed');
+      if (res.ok) {
+        setSuccess(true);
       } else {
-        router.push('/login?registered=true');
+        setError(data.error || 'Registration failed');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="container" style={{ maxWidth: '480px', marginTop: '3rem' }}>
-      <div className="card">
-        <div className="card-header text-center">
-          <h1 className="card-title">Create Account</h1>
-          <p className="text-muted mt-1">Register to access the rota portal</p>
+  if (success) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.container}>
+          <h1 style={styles.brand}>Rota Portal</h1>
+          <p style={styles.tagline}>Staff Scheduling System</p>
+          
+          <div style={styles.card}>
+            <div style={styles.success}>
+              <div style={styles.successTitle}>Registration Submitted!</div>
+              <p>Your account is pending approval. You'll be able to log in once a manager approves your registration.</p>
+            </div>
+            <div style={{...styles.footer, marginTop: '1.5rem'}}>
+              <Link href="/login" style={styles.link}>Back to Login</Link>
+            </div>
+          </div>
         </div>
+      </div>
+    );
+  }
 
-        {error && (
-          <div className="alert alert-error">{error}</div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Full Name *</label>
+  return (
+    <div style={styles.page}>
+      <div style={styles.container}>
+        <h1 style={styles.brand}>Rota Portal</h1>
+        <p style={styles.tagline}>Staff Scheduling System</p>
+        
+        <div style={styles.card}>
+          <h2 style={styles.title}>Create Account</h2>
+          <p style={styles.subtitle}>Use your exact name as it appears on the rota</p>
+          
+          {error && <div style={styles.error}>{error}</div>}
+          
+          <form onSubmit={handleSubmit}>
+            <label style={styles.label}>Full Name *</label>
             <input
               type="text"
               name="name"
-              className="form-input"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Your full name (as on rota)"
+              style={styles.input}
+              placeholder="e.g. Sam, Jagga, MAMY"
               required
             />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Username *</label>
+            <p style={styles.hint}>Must match your name on the rota exactly</p>
+            
+            <label style={styles.label}>Username *</label>
             <input
               type="text"
               name="username"
-              className="form-input"
               value={formData.username}
               onChange={handleChange}
+              style={styles.input}
               placeholder="Choose a username"
               required
             />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Password *</label>
-            <input
-              type="password"
-              name="password"
-              className="form-input"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="At least 6 characters"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Confirm Password *</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              className="form-input"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Phone Number</label>
+            
+            <label style={styles.label}>Phone Number</label>
             <input
               type="tel"
               name="phone"
-              className="form-input"
               value={formData.phone}
               onChange={handleChange}
+              style={styles.input}
               placeholder="Your phone number"
             />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Emergency Contact</label>
+            
+            <label style={styles.label}>Password *</label>
             <input
-              type="text"
-              name="emergencyContact"
-              className="form-input"
-              value={formData.emergencyContact}
+              type="password"
+              name="password"
+              value={formData.password}
               onChange={handleChange}
-              placeholder="Name and phone of emergency contact"
+              style={styles.input}
+              placeholder="Choose a password"
+              required
             />
+            
+            <label style={styles.label}>Confirm Password *</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              style={styles.input}
+              placeholder="Confirm your password"
+              required
+            />
+            
+            <button
+              type="submit"
+              disabled={loading}
+              style={{...styles.btn, ...(loading ? styles.btnDisabled : {})}}
+            >
+              {loading ? 'Registering...' : 'Register'}
+            </button>
+          </form>
+          
+          <div style={styles.footer}>
+            Already have an account? <Link href="/login" style={styles.link}>Sign In</Link>
           </div>
-
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
-            style={{ width: '100%' }}
-            disabled={loading}
-          >
-            {loading ? 'Creating Account...' : 'Create Account'}
-          </button>
-        </form>
-
-        <p className="text-center text-muted mt-3">
-          Already have an account?{' '}
-          <Link href="/login" className="link">Sign in here</Link>
-        </p>
-
-        <div className="alert alert-info mt-2">
-          <strong>Note:</strong> After registering, an admin will need to approve your account before you can log in.
         </div>
       </div>
     </div>
