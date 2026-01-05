@@ -85,6 +85,9 @@ export default function Dashboard() {
           <Link href="/" style={{ color: 'white', textDecoration: 'none' }}>
             Dashboard
           </Link>
+          <Link href="/time-off" style={{ color: '#ccc', textDecoration: 'none' }}>
+            Time Off
+          </Link>
           {session.user.role === 'admin' && (
             <Link href="/admin" style={{ color: '#ccc', textDecoration: 'none' }}>
               Admin
