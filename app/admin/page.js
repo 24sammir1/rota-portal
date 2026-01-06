@@ -423,13 +423,18 @@ export default function AdminPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, name: newName }),
-      });
-      if (res.ok) {
-        fetchPendingUsers();
-        fetchAllUsers();
-        setEditingUser(null);
-        setEditName('');
-      }
+      });const data = await res.json().catch(() => ({}));
+
+if (!res.ok) {
+  alert(data.error || `Approve failed (status ${res.status})`);
+  return;
+}
+
+fetchPendingUsers();
+fetchAllUsers();
+setEditingUser(null);
+setEditName('');
+
     } catch (error) {
       console.error('Error approving user:', error);
     }
