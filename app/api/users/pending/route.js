@@ -6,6 +6,8 @@ export const dynamic = 'force-dynamic';
 export async function GET(request) {
   try {
     const sql = neon(process.env.DATABASE_URL);
+    const countResult = await sql`SELECT COUNT(*) as total FROM users`;
+    const pendingCount = await sql`SELECT COUNT(*) as pending FROM users WHERE status = 'pending'`;
     const dbUrl = new URL(process.env.DATABASE_URL);
 
     const users = await sql`
@@ -16,7 +18,11 @@ export async function GET(request) {
     `;
 
     return NextResponse.json(
-      { users },
+      {
+        users,
+        totalUsers: countResult[0].total,
+        pendingUsers: pendingCount[0].pending
+      },
       {
         headers: {
           'Cache-Control': 'no-store, max-age=0',
