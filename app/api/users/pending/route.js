@@ -2,21 +2,26 @@ import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 
 export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     const sql = neon(process.env.DATABASE_URL);
-    
+    const dbUrl = new URL(process.env.DATABASE_URL);
+
     const users = await sql`
       SELECT id, username, name, phone, created_at
-      FROM users 
+      FROM users
       WHERE status = 'pending'
       ORDER BY created_at DESC
     `;
-    
+
     return NextResponse.json(
       { users },
       {
-        headers: { 'Cache-Control': 'no-store, max-age=0' }
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+          'X-Db-Host': dbUrl.hostname
+        }
       }
     );
     

@@ -12,6 +12,7 @@ export async function POST(request) {
     }
     
     const sql = neon(process.env.DATABASE_URL);
+    const dbUrl = new URL(process.env.DATABASE_URL);
 
     const result = await sql`
       DELETE FROM users
@@ -22,11 +23,17 @@ export async function POST(request) {
     if (result.length === 0) {
       return NextResponse.json(
         { success: true, message: 'User already processed' },
-        { status: 200 }
+        {
+          status: 200,
+          headers: { 'X-Db-Host': dbUrl.hostname }
+        }
       );
     }
 
-    return NextResponse.json({ success: true, message: 'User rejected' });
+    return NextResponse.json(
+      { success: true, message: 'User rejected' },
+      { headers: { 'X-Db-Host': dbUrl.hostname } }
+    );
     
   } catch (error) {
     console.error('Reject user error:', error);
