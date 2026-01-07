@@ -13,7 +13,12 @@ export async function GET(request) {
       ORDER BY created_at DESC
     `;
     
-    return NextResponse.json({ users });
+    return NextResponse.json(
+      { users },
+      {
+        headers: { 'Cache-Control': 'no-store, max-age=0' }
+      }
+    );
     
   } catch (error) {
     console.error('Fetch pending users error:', error);
