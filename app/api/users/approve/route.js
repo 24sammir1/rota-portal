@@ -14,18 +14,28 @@ export async function POST(request) {
 
     const sql = neon(process.env.DATABASE_URL);
 
+    let result;
     if (name && String(name).trim().length > 0) {
-      await sql`
+      result = await sql`
         UPDATE users
         SET status = 'approved', name = ${String(name).trim()}
         WHERE id = ${userId}
+        RETURNING id
       `;
     } else {
-      await sql`
+      result = await sql`
         UPDATE users
         SET status = 'approved'
         WHERE id = ${userId}
+        RETURNING id
       `;
+    }
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        { error: 'User not found or already processed' },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({ success: true, message: 'User approved' });

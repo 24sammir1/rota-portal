@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   try {
     const { userId } = await request.json();
@@ -10,9 +12,20 @@ export async function POST(request) {
     }
     
     const sql = neon(process.env.DATABASE_URL);
-    
-    await sql`DELETE FROM users WHERE id = ${userId} AND status = 'pending'`;
-    
+
+    const result = await sql`
+      DELETE FROM users
+      WHERE id = ${userId} AND status = 'pending'
+      RETURNING id
+    `;
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        { error: 'User not found or already processed' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json({ success: true, message: 'User rejected' });
     
   } catch (error) {
