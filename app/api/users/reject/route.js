@@ -15,14 +15,14 @@ export async function POST(request) {
 
     const result = await sql`
       DELETE FROM users
-      WHERE id = ${userId} AND status = 'pending'
+      WHERE id = ${userId}
       RETURNING id
     `;
 
     if (result.length === 0) {
       return NextResponse.json(
-        { error: 'User not found or already processed' },
-        { status: 404 }
+        { success: true, message: 'User already processed' },
+        { status: 200 }
       );
     }
 
