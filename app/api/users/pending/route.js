@@ -4,6 +4,7 @@ import { neon } from '@neondatabase/serverless';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
+  const timestamp = Date.now();
   try {
     const sql = neon(process.env.DATABASE_URL);
     const countResult = await sql`SELECT COUNT(*) as total FROM users`;
@@ -21,7 +22,8 @@ export async function GET(request) {
       {
         users,
         totalUsers: countResult[0].total,
-        pendingUsers: pendingCount[0].pending
+        pendingUsers: pendingCount[0].pending,
+        timestamp
       },
       {
         headers: {
