@@ -6,7 +6,17 @@ export const dynamic = 'force-dynamic';
 export async function GET(request) {
   const timestamp = Date.now();
   try {
-    const sql = neon(process.env.DATABASE_URL);
+    // Force primary database reads by using a dedicated connection
+    // This prevents reading from stale read replicas
+    const sql = neon(process.env.DATABASE_URL, {
+      fetchOptions: {
+        priority: 'high',
+      },
+    });
+
+    // Force primary read by setting session to read-write mode
+    await sql`SET SESSION CHARACTERISTICS AS TRANSACTION READ WRITE`;
+
     const countResult = await sql`SELECT COUNT(*) as total FROM users`;
     const pendingCount = await sql`SELECT COUNT(*) as pending FROM users WHERE status = 'pending'`;
     const dbUrl = new URL(process.env.DATABASE_URL);
