@@ -11,6 +11,7 @@ export async function GET(request) {
     const dbUrl = new URL(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL);
     const metaRows = await sql`select current_database() as db, current_schema() as schema`;
     const searchPathRows = await sql`show search_path`;
+    const userRows = await sql`select current_user as current_user, session_user as session_user`;
     const pendingCountRows = await sql`
       select count(*)::int as pending_count
       from public.users
@@ -28,10 +29,12 @@ export async function GET(request) {
     return NextResponse.json(
       {
         meta: {
-          db: metaRows?.[0]?.db ?? null,
-          schema: metaRows?.[0]?.schema ?? null,
-          search_path: searchPathRows?.[0]?.search_path ?? null,
-        },
+  db: metaRows?.[0]?.db ?? null,
+  schema: metaRows?.[0]?.schema ?? null,
+  search_path: searchPathRows?.[0]?.search_path ?? null,
+  db_user: userRows?.[0]?.current_user ?? null,
+  session_user: userRows?.[0]?.session_user ?? null,
+},
         pending_count: pendingCountRows?.[0]?.pending_count ?? null,
         users,
         timestamp

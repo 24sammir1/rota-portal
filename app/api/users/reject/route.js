@@ -18,6 +18,7 @@ export async function POST(request) {
     // Fingerprint + visibility checks
     const metaRows = await sql`select current_database() as db, current_schema() as schema`;
     const searchPathRows = await sql`show search_path`;
+const userRows = await sql`select current_user as current_user, session_user as session_user`;
     const hasBeforeRows = await sql`
       select exists(select 1 from public.users where id = ${userId}) as has_before
     `;
@@ -36,12 +37,14 @@ export async function POST(request) {
     return NextResponse.json(
       {
         ok: true,
-        meta: {
-          db: metaRows?.[0]?.db ?? null,
-          schema: metaRows?.[0]?.schema ?? null,
-          search_path: searchPathRows?.[0]?.search_path ?? null,
-          db_host: dbUrl.hostname,
-        },
+       meta: {
+  db: metaRows?.[0]?.db ?? null,
+  schema: metaRows?.[0]?.schema ?? null,
+  search_path: searchPathRows?.[0]?.search_path ?? null,
+  db_user: userRows?.[0]?.current_user ?? null,
+  session_user: userRows?.[0]?.session_user ?? null,
+  db_host: dbUrl.hostname,
+},
         userId,
         has_before: hasBeforeRows?.[0]?.has_before ?? null,
         deleted_ids: deletedRows?.map(r => r.id) ?? [],
