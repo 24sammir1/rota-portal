@@ -3,7 +3,8 @@ import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
 export const dynamic = 'force-dynamic';
 export async function POST(request) {
-  const dbUrl = new URL(process.env.DATABASE_URL);
+  // Use unpooled connection to bypass pooler and read directly from primary
+  const dbUrl = new URL(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL);
   try {
     const { name, phone, address, dob, emergencyName, emergencyRelation, emergencyPhone, existingStaff, startDate, username, password } = await request.json();
     if (!name || !phone || !username || !password) {
@@ -17,7 +18,7 @@ export async function POST(request) {
         }
       );
     }
-    const sql = neon(process.env.DATABASE_URL);
+    const sql = neon(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL);
     const existing = await sql`SELECT id FROM users WHERE username = ${username}`;
     if (existing.length > 0) {
       return NextResponse.json(

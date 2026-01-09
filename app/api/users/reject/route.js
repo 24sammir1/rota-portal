@@ -11,8 +11,9 @@ export async function POST(request) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
     
-    const sql = neon(process.env.DATABASE_URL);
-    const dbUrl = new URL(process.env.DATABASE_URL);
+    // Use unpooled connection to bypass pooler and read directly from primary
+    const sql = neon(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL);
+    const dbUrl = new URL(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL);
 
     const result = await sql`
       DELETE FROM users
