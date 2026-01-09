@@ -12,7 +12,7 @@ export async function GET(request) {
 
     const users = await sql`
       SELECT id, username, name, phone, created_at
-      FROM users
+      FROM public.users
       WHERE status = 'pending'
       ORDER BY created_at DESC
     `;
