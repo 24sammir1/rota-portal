@@ -25,7 +25,7 @@ export async function GET() {
     `;
 
     const searchPathRows = await sql`show search_path`;
-    const usersCountRows = await sql`select count(*)::int as users_count from users`;
+    const usersCountRows = await sql`select count(*)::int as users_count from public.users`;
     const idsRows = await sql`select coalesce(array_agg(id order by id), '{}') as ids from users`;
     const has15Rows = await sql`select exists(select 1 from users where id=15) as has_15`;
     const has16Rows = await sql`select exists(select 1 from users where id=16) as has_16`;
