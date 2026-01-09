@@ -4,6 +4,7 @@ import { neon } from '@neondatabase/serverless';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
+  const timestamp = Date.now();
   try {
     const sql = neon(process.env.DATABASE_URL);
     const dbUrl = new URL(process.env.DATABASE_URL);
@@ -16,7 +17,7 @@ export async function GET(request) {
     `;
 
     return NextResponse.json(
-      { users },
+      { users, timestamp },
       {
         headers: {
           'Cache-Control': 'no-store, max-age=0',
