@@ -16,7 +16,7 @@ export async function POST(request) {
     const dbUrl = new URL(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL);
 
     const result = await sql`
-      DELETE FROM users
+      DELETE FROM public.users
       WHERE id = ${userId}
       RETURNING id
     `;
