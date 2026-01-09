@@ -3,54 +3,29 @@ import { neon } from '@neondatabase/serverless';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request) {
-  const timestamp = Date.now();
+export async function GET() {
   try {
-    // Use unpooled connection to bypass pooler and read directly from primary
     const sql = neon(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL);
-    const dbUrl = new URL(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL);
-    const metaRows = await sql`select current_database() as db, current_schema() as schema`;
-    const searchPathRows = await sql`show search_path`;
-    const userRows = await sql`select current_user as current_user, session_user as session_user`;
-    const pendingCountRows = await sql`
-      select count(*)::int as pending_count
-      from public.users
-      where status = 'pending'
-    `;
-
 
     const users = await sql`
-      SELECT id, username, name, created_at
-      FROM public.users
+      SELECT id, username, name, phone, created_at
+      FROM users
       WHERE status = 'pending'
       ORDER BY created_at DESC
     `;
 
     return NextResponse.json(
-      {
-        db_name: metaRows?.[0]?.db ?? null,
-        meta: {
-  db: metaRows?.[0]?.db ?? null,
-  schema: metaRows?.[0]?.schema ?? null,
-  search_path: searchPathRows?.[0]?.search_path ?? null,
-  db_user: userRows?.[0]?.current_user ?? null,
-  session_user: userRows?.[0]?.session_user ?? null,
-},
-        pending_count: pendingCountRows?.[0]?.pending_count ?? null,
-        users,
-        timestamp
-      },
-
+      { users },
       {
         headers: {
-          'Cache-Control': 'no-store, max-age=0',
-          'X-Db-Host': dbUrl.hostname
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       }
     );
-    
   } catch (error) {
-    console.error('Fetch pending users error:', error);
-    return NextResponse.json({ error: 'Failed to fetch pending users', details: error.message }, { status: 500 });
+    console.error('Pending users error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
