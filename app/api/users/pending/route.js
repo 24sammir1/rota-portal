@@ -28,6 +28,7 @@ export async function GET(request) {
 
     return NextResponse.json(
       {
+        db_name: metaRows?.[0]?.db ?? null,
         meta: {
   db: metaRows?.[0]?.db ?? null,
   schema: metaRows?.[0]?.schema ?? null,
