@@ -343,7 +343,7 @@ export default function AdminPage() {
 
   const fetchPendingUsers = async () => {
     try {
-      const res = await fetch('/api/users/pending', { cache: 'no-store' });
+      const res = await fetch(`/api/users/pending?t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.users) setPendingUsers([...data.users]);
     } catch (error) {
