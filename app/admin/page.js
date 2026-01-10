@@ -478,6 +478,8 @@ export default function AdminPage() {
       if (!res.ok) {
         await fetchPendingUsers(); // rollback
         alert(data.error || `Reject failed (status ${res.status})`);
+      } else {
+        await fetchPendingUsers(); // force refresh to confirm deletion
       }
     } catch (error) {
       await fetchPendingUsers(); // rollback
